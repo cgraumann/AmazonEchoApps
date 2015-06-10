@@ -51,8 +51,8 @@ http.createServer(function (req, res) {
 
 function buildHeader(length) {
     return {
-        Content-Type: 'application/json;charset=UTF-8',
-        Content-Length: length
+        'Content-Type': 'application/json;charset=UTF-8',
+        'Content-Length': length
     };
 }
 
