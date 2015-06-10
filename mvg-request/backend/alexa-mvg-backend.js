@@ -5,47 +5,56 @@
  * License: MIT
  */
 
-// Route the incoming request based on type (LaunchRequest, IntentRequest,
-// etc.) The JSON body of the request is provided in the event parameter.
-exports.handler = function (event, context) {
-    try {
-        console.log("event.session.application.applicationId=" + event.session.application.applicationId);
+// node.js server
+var http = require('http');
 
-        /**
-         * Uncomment this if statement and replace application.id with yours
-         * to prevent other voice applications from using this function.
-         */
-        /*
-        if (event.session.application.applicationId !== "amzn1.echo-sdk-ams.app.[unique-value-here]") {
+http.createServer(function (req, res) {
+    try {           
+
+        console.log("req.session.application.applicationId=" + req.session.application.applicationId);
+
+        if (req.session.application.applicationId !== "amzn1.echo-sdk-ams.app.f9a93d2c-1735-4650-a5bb-ac876248f3c4") {
             context.fail("Invalid Application ID");
         }
-        */
+        
 
-        if (event.session.new) {
-            onSessionStarted({requestId: event.request.requestId}, event.session);
+        if (req.session.new) {
+            onSessionStarted({requestId: req.request.requestId}, req.session);
         }
 
-        if (event.request.type === "LaunchRequest") {
-            onLaunch(event.request,
-                     event.session,
+        if (req.request.type === "LaunchRequest") {
+            onLaunch(req.request,
+                     req.session,
                      function callback(sessionAttributes, speechletResponse) {
-                        context.succeed(buildResponse(sessionAttributes, speechletResponse));
+                        data = buildResponse(sessionAttributes, speechletResponse);
+                        res.writeHead(200, buildHeader(data.length))
+                        res.end(data);
                      });
-        }  else if (event.request.type === "IntentRequest") {
-            onIntent(event.request,
-                     event.session,
+        }  else if (req.request.type === "IntentRequest") {
+            onIntent(req.request,
+                     req.session,
                      function callback(sessionAttributes, speechletResponse) {
-                         context.succeed(buildResponse(sessionAttributes, speechletResponse));
+                         data = buildResponse(sessionAttributes, speechletResponse);
+                        res.writeHead(200, buildHeader(data.length))
+                        res.end(data);
                      });
-        } else if (event.request.type === "SessionEndedRequest") {
-            onSessionEnded(event.request, event.session);
-
-            context.succeed();
+        } else if (req.request.type === "SessionEndedRequest") {
+            onSessionEnded(req.request, req.session);
+            res.writeHead(200, buildHeader(0))
+            res.end();
         }
     } catch (e) {
-        context.fail("Exception: " + e);
+        res.writeHead(500, buildHeader(0))
+        res.end();
     }
-};
+}).listen(61111);
+
+function buildHeader(length) {
+    return {
+        Content-Type: 'application/json;charset=UTF-8',
+        Content-Length: length
+    };
+}
 
 /**
  * Called when the session starts.
