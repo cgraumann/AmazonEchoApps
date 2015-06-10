@@ -75,10 +75,10 @@ function onIntent(intentRequest, session, callback) {
     var intent = intentRequest.intent,
         intentName = intentRequest.intent.name;
 
-    if ("MyColorIsIntent" === intentName) {
-        setColorInSession(intent, session, callback);
-    } else if ("WhatsMyColorIntent" === intentName) {
-        getColorFromSession(intent, session, callback);
+    if ("NextTrain" === intentName) {
+        getStationDepartures(intent, session, callback);
+    } else if ("NextLocalTrain" === intentName) {
+        getLocalDepartures(intent, session, callback);
     } else {
         throw "Invalid intent";
     }
@@ -120,7 +120,7 @@ function buildSpeechletResponse(title, output, repromptText, shouldEndSession) {
 
 function buildResponse(sessionAttributes, speechletResponse) {
     return {
-        version: "1.0",
+        version: "0.1",
         sessionAttributes: sessionAttributes,
         response: speechletResponse
     }
@@ -133,76 +133,67 @@ function getWelcomeResponse(callback) {
     // If we wanted to initialize the session to have some attributes we could add those here.
     var sessionAttributes = {};
     var cardTitle = "Welcome";
-    var speechOutput = "Welcome to the Alexa AppKit session sample app, "
-                + "Please tell me your favorite color by saying, "
-                + "my favorite color is red";
+    var speechOutput = "Welcome to the Munich Transit Info app. "+
+                        "You request the next train departure time for a specific station or your home station.";
     // If the user either does not reply to the welcome message or says something that is not
     // understood, they will be prompted again with this text.
-    var repromptText = "Please tell me your favorite color by saying, "
-                + "my favorite color is red";
+    var repromptText = "For which station do you want to get the upcoming departures?";
     var shouldEndSession = false;
 
     callback(sessionAttributes,
              buildSpeechletResponse(cardTitle, speechOutput, repromptText, shouldEndSession));
 }
 
-/**
- * Sets the color in the session and prepares the speech to reply to the user.
- */
-function setColorInSession(intent, session, callback) {
-    var cardTitle = intent.name;
-    var favoriteColorSlot = intent.slots.Color;
-    var repromptText = "";
-    var sessionAttributes = {};
-    var shouldEndSession = false;
+function getStationDepartures(intent, session, callback) {
+    var stationSlot = intent.slots.Station;
+    var destinationSlot = intent.slots.Destination;
     var speechOutput = "";
 
-    if (favoriteColorSlot) {
-        favoriteColor = favoriteColorSlot.value;
-        sessionAttributes = createFavoriteColorAttributes(favoriteColor);
-        speechOutput = "I now know your favorite color is " + favoriteColor + ". You can ask me "
-                + "your favorite color by saying, what's my favorite color?";
-        repromptText = "You can ask me your favorite color by saying, what's my favorite color?";
+    if (stationSlot) {
+        station = stationSlot.value;
+         if (destinationSlot) {
+            speechOutput = "I cannot yet handle destinations. Try simply asking for the next train!";
+            repromptText = "I didn' get that. You can ask when the next train leaves at a station.";
+            callback({}, buildSpeechletResponse("MVG Station", speechOutput, repromptText, false));
+        } else {
+            receiveMvgDepartures(station,respondDepartureResult, callback);
+        }
+ 
     } else {
-        speechOutput = "I'm not sure what your favorite color is, please try again";
-        repromptText = "I'm not sure what your favorite color is, you can tell me your "
-                + "favorite color by saying, my favorite color is red";
+        speechOutput = "I'm not sure which station you asked for, please try again";
+        repromptText = "I didn' get that. You can ask when the next train leaves at a station.";
+        callback({}, buildSpeechletResponse("MVG Station", speechOutput, repromptText, false));
     }
-
-    callback(sessionAttributes, 
-             buildSpeechletResponse(cardTitle, speechOutput, repromptText, shouldEndSession));
 }
 
-function createFavoriteColorAttributes(favoriteColor) {
-    return {
-        favoriteColor: favoriteColor
-    };
-}
-
-function getColorFromSession(intent, session, callback) {
-    var cardTitle = intent.name;
-    var favoriteColor;
-    var repromptText = null;
-    var sessionAttributes = {};
-    var shouldEndSession = false;
+function getLocalDepartures(intent, session, callback) {
     var speechOutput = "";
 
-    if(session.attributes) {
-        favoriteColor = session.attributes.favoriteColor;
-    }
+    station = "Freimann"; // Currently hard coded. TODO: store some user stations
+    receiveMvgDepartures(station,respondDepartureResult, callback);
+}
 
-    if(favoriteColor) {
-        speechOutput = "Your favorite color is " + favoriteColor + ", goodbye";
-        shouldEndSession = true;
+function respondDepartureResult(data,callback) {
+    if (!data.station) {
+        speechOutput = "I could not receive information from the transit system, please try again later.";
+    } else {
+        nextTrain = data.result_sorted[0];
+        speechOutput = "The next train at "+data.station
+                        +" is the "+nextTrain.line
+                        +" to "+nextTrain.destination
+                        +" and leaves in "+nextTrain.minutes
+                        +" minutes.";
     }
-    else {
-        speechOutput = "I'm not sure what your favorite color is, you can say, my favorite color "
-                + " is red";
-    }
+    
+    callback({}, buildSpeechletResponse("MVG Station", speechOutput, "repromptText", true));
+}
 
-    // Setting repromptText to null signifies that we do not want to reprompt the user. 
-    // If the user does not respond or says something that is not understood, the app session 
-    // closes.
-    callback(sessionAttributes,
-             buildSpeechletResponse(intent.name, speechOutput, repromptText, shouldEndSession));
+function receiveMvgDepartures(station, callback, finalCallback) {
+    var util  = require('util'),
+    spawn = require('child_process').spawn,
+    mvg    = spawn('mvg_json', [station]);
+
+    mvg.stdout.on('data', function (data) {        
+        callback(JSON.parse(data),finalCallback);
+    });
 }
