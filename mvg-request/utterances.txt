@@ -1,0 +1,22 @@
+NextTrain when is the next train at {freimann|Station}
+NextTrain when is the next train at {garching|Station}
+NextTrain when is the next train at {garching forschungszentrum|Station}
+NextTrain when is the next train at {studentenstadt|Station}
+NextTrain when is the next train to {garching forschungszentrum|Direction} from {freimann|Station}
+NextTrain when is the next train to {harras|Direction} from {freimann|Station}
+NextTrain when is the next train to {garching|Direction} from {freimann|Station}
+NextTrain when is the next train to {city center|Direction} from {freimann|Station}
+NextTrain when is the next train to {klinikum grosshadern|Direction} from {freimann|Station}
+NextTrain when is the next train to {grosshadern|Direction} from {freimann|Station}
+NextLocalTrain when is the next train
+NextLocalTrain when does the next train go
+NextLocalTrain when goes the next train
+NextLocalTrain how long until the next train
+NextLocalTrain when does the next train come
+NextLocalTrain when can I catch a train
+NextLocalTrain when are the next trains
+NextLocalTrain when is a train coming
+NextLocalTrain when comes a train
+NextLocalTrain tell me when a train comes
+NextLocalTrain tell me the next train departure time
+NextLocalTrain give me the next train departure time
