@@ -8,6 +8,10 @@ NextTrain when is the next train to {garching|Direction} from {freimann|Station}
 NextTrain when is the next train to {city center|Direction} from {freimann|Station}
 NextTrain when is the next train to {klinikum grosshadern|Direction} from {freimann|Station}
 NextTrain when is the next train to {grosshadern|Direction} from {freimann|Station}
+NextTrain {freimann|Station}
+NextTrain tell me when the next train leaves at {freimann|Station}
+NextTrain give me the next departures for {freimann|Station}
+NextTrain when does the next train leave at {freimann|Station}
 NextLocalTrain when is the next train
 NextLocalTrain when does the next train go
 NextLocalTrain when goes the next train
